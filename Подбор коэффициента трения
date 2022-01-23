@@ -1,0 +1,117 @@
+#include <math.h>
+#include <iostream>
+#include <iomanip> 
+
+const long double EPSILON = 0.0000001;
+const long double EXATITUDE = 0.00000001;  // точность определения коэффициента
+const long double G = 9.8;  // ускорение свободного падения
+const long double TIME = 60; // максимальное время моделирование
+const long double EXPEREMENT_ANGLE = 0.2270238;  // угол первой осановки маятника, полученный эксперементально
+const long double START_ANGLE = 0.2415876;  // начальный угол
+const long double LENGTH = 0.4765;  // параметры маятника
+const long double MASS = 0.0495;
+const long double BALL_RADIUS = 0.0012;
+const long double GLUE_RADIUS = 0.0042;
+const long double GLUE_MASS = 0.001;
+const long double METAL_RADIUS = 0.0018;
+const long double METAL_MASS = 0.00143956343;
+
+const long double RESISTACE_COEFFICIENT_0 = 4.40834e-5;  // известный коэффифиент 
+long double RESISTACE_COEFFICIENT;  // неизвестниый коэффициент
+
+using namespace std;
+
+struct Pendulum
+{
+	long double angle = START_ANGLE;
+	long double velocity = 0;
+	long double acceleration;
+
+	void get_acceleration()
+	{
+		long double I = GLUE_MASS * GLUE_RADIUS * GLUE_RADIUS / 2 + METAL_MASS * ((GLUE_RADIUS + METAL_RADIUS) * (GLUE_RADIUS + METAL_RADIUS) + GLUE_RADIUS * GLUE_RADIUS) / 2 + MASS * LENGTH * LENGTH / 3;
+
+		long double resistace_moment = G * (RESISTACE_COEFFICIENT * abs(velocity) * abs(velocity) + RESISTACE_COEFFICIENT_0) * (GLUE_RADIUS + METAL_RADIUS) / BALL_RADIUS * sqrt((METAL_MASS + GLUE_MASS) * (METAL_MASS + GLUE_MASS) + (MASS * cos(angle)) * (MASS * cos(angle)) - 2 * (METAL_MASS + GLUE_MASS) * (MASS * cos(angle)) * cos(angle));
+
+		long double flag = 1;
+
+		if (velocity == 0)
+		{
+			flag = 0;
+		}
+		else if (velocity < 0)
+		{
+			flag = -1;
+		}
+
+		acceleration = -1 * (MASS * G * sin(angle) * LENGTH / 2 + resistace_moment * flag) / I;
+	}
+
+	void move()
+	{
+		angle += velocity * EPSILON + acceleration * EPSILON * EPSILON / 2;
+
+		velocity += acceleration * EPSILON;
+	}
+
+	void print()
+	{
+		cout << angle << ' ' << velocity << ' ' << acceleration << '\n';
+	}
+};
+
+long double get_angle_with_zero_speed(Pendulum pendulum)
+{
+	long double previous_velocity = 0, previous_angle = 0, counter = 0;
+
+	for (long double i = 0; i < TIME; i += EPSILON)
+	{	
+		if (((pendulum.velocity > 0) && (previous_velocity < 0)) || ((pendulum.velocity < 0) && (previous_velocity > 0)))
+		{
+			return (previous_angle + pendulum.angle) / 2;
+		}
+
+		previous_velocity = pendulum.velocity;
+		previous_angle = pendulum.angle;
+
+		pendulum.get_acceleration();
+		pendulum.move();
+	}
+}
+
+int main()
+{
+	Pendulum pendulum;
+
+	long double left_RESISTACE_COEFFICIENT = 0;
+	long double	right_RESISTACE_COEFFICIENT = 0.002;
+
+	while (true)
+	{
+		RESISTACE_COEFFICIENT = (left_RESISTACE_COEFFICIENT + right_RESISTACE_COEFFICIENT) / 2;
+
+		long double angle = abs(get_angle_with_zero_speed(pendulum));
+		cout << angle << ' ' << RESISTACE_COEFFICIENT << '\n';
+
+		if (abs(angle - EXPEREMENT_ANGLE) < EXATITUDE)
+		{
+			break;
+		}
+
+		if (angle < EXPEREMENT_ANGLE)
+		{
+			right_RESISTACE_COEFFICIENT = RESISTACE_COEFFICIENT;
+			continue;
+		}
+
+		if (angle > EXPEREMENT_ANGLE)
+		{
+			left_RESISTACE_COEFFICIENT = RESISTACE_COEFFICIENT;
+			continue;
+		}
+
+	}
+
+	cout << RESISTACE_COEFFICIENT;
+
+}
