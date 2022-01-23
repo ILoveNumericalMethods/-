@@ -1,0 +1,97 @@
+#include <math.h>
+#include <iostream>
+#include <Windows.h>
+
+// все параметри сисиемы в СИ
+
+const long double EPSILON = 0.0000001;
+const long double G = 9.8;  // ускорение свободного падения
+const long double TIME = 60;  // время моделирования 
+const long double START_ANGLE = 0.2415876;  // стартовый угол
+const long double START_VELOCITY = 0;  // стартовая скорость
+const long double RESISTACE_COEFFICIENT_0 = 4.40834e-5;  // коэффициент альфа 0
+const long double RESISTACE_COEFFICIENT = 0.000284847;  // коэффициент альфа
+const long double LENGTH = 0.4765;  // далее задаются параметры маятника
+const long double MASS = 0.0495;
+const long double BALL_RADIUS = 0.0012;
+const long double GLUE_RADIUS = 0.0042;
+const long double GLUE_MASS = 0.001;
+const long double METAL_RADIUS = 0.0018;
+const long double METAL_MASS = 0.00143956343;
+
+
+using namespace std;
+
+struct Pendulum
+{
+	long double angle = START_ANGLE;
+	long double velocity = START_VELOCITY;
+	long double acceleration;
+
+	void get_acceleration()
+	{
+		long double I = GLUE_MASS * GLUE_RADIUS * GLUE_RADIUS / 2 + METAL_MASS * ((GLUE_RADIUS + METAL_RADIUS) * (GLUE_RADIUS + METAL_RADIUS) + GLUE_RADIUS * GLUE_RADIUS) / 2 + MASS * LENGTH * LENGTH / 3;
+		
+		long double resistace_moment = G * (RESISTACE_COEFFICIENT * abs(velocity) * abs(velocity) + RESISTACE_COEFFICIENT_0) * GLUE_RADIUS / BALL_RADIUS * sqrt((METAL_MASS + GLUE_MASS) * (METAL_MASS + GLUE_MASS) + (MASS * cos(angle)) * (MASS * cos(angle)) - 2 * (METAL_MASS + GLUE_MASS) * (MASS * cos(angle)) * cos(angle));
+
+		long double flag = 1;
+
+		if (velocity == 0)
+		{
+			flag = 0;
+		}
+		else if(velocity < 0)
+		{
+			flag = -1;
+		}
+
+		acceleration = -1 * (MASS * G * sin(angle) * LENGTH / 2 + resistace_moment * flag) / I;
+	}
+
+	void move()
+	{
+		angle += velocity * EPSILON + acceleration * EPSILON * EPSILON / 2;
+
+		velocity += acceleration * EPSILON;
+	}
+
+	void print()
+	{
+		printf("{%f,%f},", time, angle);
+	}
+
+	void print_table_time()
+	{
+		printf("%f\n", time);
+	}
+
+	void print_table_angle()
+	{
+		printf("%f\n", angle);
+	}	
+};
+
+int main()
+{
+	Pendulum pendulum;
+	long long counter = 0;
+  
+	//printf("ListLinePlot[{");
+
+	for (time = 0; time < TIME; time += EPSILON)
+	{
+		if (counter % 33333 == 0)
+		{
+			pendulum.print();
+			counter -= 33333;
+		}
+
+		pendulum.get_acceleration();
+		pendulum.move();
+
+		counter++;
+	}
+
+	//printf("}]");
+
+}
