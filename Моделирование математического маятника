@@ -1,0 +1,71 @@
+#include <math.h>
+#include <iostream>
+
+const long double EPSILON = 0.0000001; 
+const long double START_ANGLE = 2.83;  // начальный угол
+const long double START_VELOCITY = 1;  // начальная скорость
+const long double PENDULUM_LENGTH = 1;  // длина маятника
+const long double G = 9.8;  // ускорение свободного падения
+const long double TIME = 3;  // время до которого будет вестить моделирование
+const long double PI = cos(-1);
+
+using namespace std;
+
+struct Pendulum
+{
+	long double angle = START_ANGLE;
+	long double velocity = START_VELOCITY;
+	long double acceleration;
+
+	void get_acceleration()
+	{
+		acceleration = -1 * G / PENDULUM_LENGTH * sin(angle);
+	}
+
+	void move()
+	{
+		angle += velocity * EPSILON + acceleration * EPSILON * EPSILON / 2;
+		
+		velocity += acceleration * EPSILON;
+	}
+
+	void print()
+	{
+		printf("{%f,%f},", time, angle);
+	}
+
+	void print_table_time()
+	{
+		printf("%f\n", time);
+	}
+
+	void print_table_angle()
+	{
+		printf("%f\n", angle);
+	}
+};
+
+int main()
+{
+	Pendulum pendulum;
+	long long counter = 333333;
+
+	//printf("ListLinePlot[{");
+
+	for (time = 0; time < TIME; time += EPSILON)
+	{
+		if (counter % 333333 == 0)
+		{
+			pendulum.print();
+			counter -= 333333;
+		}
+
+		pendulum.get_acceleration();
+		pendulum.move();
+
+		counter++;
+	}
+
+	//printf("}]");
+    
+}
